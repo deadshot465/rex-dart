@@ -1,0 +1,19 @@
+name: Rex
+description: Rex from Xenoblade Chronicles 2.
+version: 0.2.0
+homepage: https://github.com/deadshot465/rex-dart
+
+environment:
+  sdk: '>=2.10.0 <3.0.0'
+
+dependencies:
+  dotenv: '^2.0.0'
+  nyxx:
+    git:
+      url: 'https://github.com/l7ssha/nyxx.git'
+      path: 'nyxx'
+      ref: '1.1'
+
+dev_dependencies:
+  pedantic: ^1.9.0
+  test: ^1.14.4
