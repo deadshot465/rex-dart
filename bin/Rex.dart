@@ -14,9 +14,13 @@ void main(List<String> arguments) {
   final rng = Random();
 
   Future.doWhile(() async {
-    await Future.delayed(Duration(hours: 1));
+    await Future.delayed(Duration(minutes: 10));
     final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
-    client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
+    try {
+      client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
+    } catch (e) {
+      print(e.toString());
+    }
     return true;
   });
 
