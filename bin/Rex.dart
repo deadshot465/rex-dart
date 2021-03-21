@@ -1,17 +1,28 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:dotenv/dotenv.dart' show load, env;
 import 'package:nyxx/nyxx.dart';
 
 const RANDOM_RESPONSES = ['Hello there' 'Good evening' 'Good morning' "G'day" 'Hi'];
+const ACTIVITIES = ['Nintendo Switch', 'Xenoblade Chronicles 2', 'Playstation 5', 'Xbox Series X'];
 
 void main(List<String> arguments) {
   load();
   final token = env['TOKEN'];
   final client = Nyxx(token, GatewayIntents.guildMessages);
+  final rng = Random();
+
+  Future.doWhile(() async {
+    await Future.delayed(Duration(hours: 1));
+    final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
+    client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
+    return true;
+  });
 
   client.onReady.listen((event) {
-    client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: Activity.of('Xenoblade Chronicles 2')));
+    final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
+    client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
   });
 
   client.onSelfMention.listen((event) async {
