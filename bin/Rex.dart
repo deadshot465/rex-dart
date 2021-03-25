@@ -37,7 +37,7 @@ void main(List<String> arguments) {
     final mention = '<@!${event.message.author.id.id}>';
     final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
     final channel = await event.message.channel.getOrDownload();
-    await channel.sendMessage(content: '$randomResponse, $mention!');
+    await channel.sendMessage(content: '$randomResponse、$mention!');
   });
 
   client.onMessageReceived.listen((event) async {
@@ -45,7 +45,7 @@ void main(List<String> arguments) {
       final mention = '<@!${event.message.author.id.id}>';
       final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
       final channel = await event.message.channel.getOrDownload();
-      await channel.sendMessage(content: '$randomResponse, $mention!');
+      await channel.sendMessage(content: '$randomResponse、$mention!');
     }
 
     if (event.message.content == 'r?ping') {
