@@ -4,17 +4,19 @@ import 'dart:math';
 import 'package:dotenv/dotenv.dart' show load, env;
 import 'package:nyxx/nyxx.dart';
 
-const RANDOM_RESPONSES = ['Hello there' 'Good evening' 'Good morning' "G'day" 'Hi'];
-const ACTIVITIES = ['Nintendo Switch', 'Xenoblade Chronicles 2', 'Playstation 5', 'Xbox Series X'];
+const RANDOM_RESPONSES = ['やほー', 'こんばんは', 'おはよう', 'こんにちは', 'ご機嫌よう', 'よろしくね', 'なに'];
+const ACTIVITIES = ['Nintendo Switch', 'ゼノブレイド2', 'PlayStation 5', 'Xbox Series X'];
 
 void main(List<String> arguments) {
   load();
   final token = env['TOKEN'];
-  final client = Nyxx(token, GatewayIntents.guildMessages);
+  final client = Nyxx(token, GatewayIntents.guildMessages | GatewayIntents.allUnprivileged);
   final rng = Random();
+  var clientId = 0;
+  var clientMention = '';
 
   Future.doWhile(() async {
-    await Future.delayed(Duration(minutes: 10));
+    await Future.delayed(Duration(minutes: 20));
     final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
     try {
       client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
@@ -27,23 +29,31 @@ void main(List<String> arguments) {
   client.onReady.listen((event) {
     final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
     client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
+    clientId = client.self.id.id;
+    clientMention = '<@!$clientId>';
   });
 
   client.onSelfMention.listen((event) async {
-    final mention = '<@${event.message.author.id.id}>';
-    final rng = Random();
+    final mention = '<@!${event.message.author.id.id}>';
     final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
     final channel = await event.message.channel.getOrDownload();
     await channel.sendMessage(content: '$randomResponse, $mention!');
   });
 
   client.onMessageReceived.listen((event) async {
+    if (event.message.content.contains(clientMention)) {
+      final mention = '<@!${event.message.author.id.id}>';
+      final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
+      final channel = await event.message.channel.getOrDownload();
+      await channel.sendMessage(content: '$randomResponse, $mention!');
+    }
+
     if (event.message.content == 'r?ping') {
       final startTime = DateTime.now();
       final channel = await event.message.channel.getOrDownload();
-      final message = await channel.sendMessage(content: '\uD83C\uDFD3 Pinging...');
+      final message = await channel.sendMessage(content: '\uD83C\uDFD3 ピング中……');
       final diff = DateTime.now().difference(startTime).inMilliseconds;
-      await message?.edit(content: '\uD83C\uDFD3 Pong!\nLatency is: ${diff}ms.');
+      await message?.edit(content: '\uD83C\uDFD3 ポン！\nレイテンシ：${diff}ミリ秒。');
     }
 
     if (event.message.content == 'r?about') {
@@ -51,14 +61,14 @@ void main(List<String> arguments) {
       final embed = EmbedBuilder()
           ..addAuthor((author) {
             author.iconUrl = iconUrl;
-            author.name = 'Rex from Xenoblade Chronicles 2';
+            author.name = 'ゼノブレイド2のレックス';
           })
           ..addFooter((footer) {
-            footer.text = 'Rex Bot: Release 0.2 | 2021-03-20';
+            footer.text = 'レックスボット：リリース 0.3 | 2021-03-26';
           });
       embed.color = DiscordColor.fromHexString('#37FEAB');
       embed.thumbnailUrl = 'https://cdn.discordapp.com/emojis/236895119972892672.png';
-      embed.description = 'Rex in the Church of Minamoto Kou.\nRex was inspired by the game Xenoblade Chronicles 2 on Nintendo Switch.\nRex version 0.2 was made and developed by:\n**Tetsuki Syu#1250, Kirito#9286**\nWritten with:\n[Dart](https://dart.dev/) and [Nyxx](https://github.com/l7ssha/nyxx) library.';
+      embed.description = 'The Land of Cute Boisのレックス。\nレックスは[Nintendo Switch](https://www.nintendo.co.jp/hardware/switch/)ゲーム「[ゼノブレイド2](https://www.nintendo.co.jp/switch/adena/index.html)」の主人公から発想して、レックスの真似をするボットです。\nレックスバージョン0.2の開発者：\n**Tetsuki Syu#1250、Kirito#9286**\n制作言語・フレームワーク：\n[Dart](https://dart.dev/)と[Nyxx](https://github.com/l7ssha/nyxx)ライブラリ。';
       final channel = await event.message.channel.getOrDownload();
       await channel.sendMessage(embed: embed);
     }

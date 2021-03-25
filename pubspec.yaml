@@ -1,7 +1,8 @@
 name: Rex
 description: Rex from Xenoblade Chronicles 2.
-version: 0.2.0
+version: 0.3.0
 homepage: https://github.com/deadshot465/rex-dart
+publish_to: none
 
 environment:
   sdk: '>=2.10.0 <3.0.0'
