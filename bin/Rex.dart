@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:dotenv/dotenv.dart' show load, env;
 import 'package:nyxx/nyxx.dart';
+import 'package:owoify_dart/owoify_dart.dart';
 
 const RANDOM_RESPONSES = ['やほー', 'こんばんは', 'おはよう', 'こんにちは', 'ご機嫌よう', 'よろしくね', 'なに'];
 const ACTIVITIES = ['Nintendo Switch', 'ゼノブレイド2', 'PlayStation 5', 'Xbox Series X'];
@@ -34,20 +35,13 @@ void main(List<String> arguments) {
   });
 
   client.onSelfMention.listen((event) async {
-    final mention = '<@!${event.message.author.id.id}>';
+    final author = event.message.author as User;
     final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
     final channel = await event.message.channel.getOrDownload();
-    await channel.sendMessage(content: '$randomResponse、$mention!');
+    await channel.sendMessage(content: '$randomResponse、${author.mention}!');
   });
 
   client.onMessageReceived.listen((event) async {
-    if (event.message.content.contains(clientMention)) {
-      final mention = '<@!${event.message.author.id.id}>';
-      final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
-      final channel = await event.message.channel.getOrDownload();
-      await channel.sendMessage(content: '$randomResponse、$mention!');
-    }
-
     if (event.message.content == 'r?ping') {
       final startTime = DateTime.now();
       final channel = await event.message.channel.getOrDownload();
@@ -71,6 +65,13 @@ void main(List<String> arguments) {
       embed.description = 'The Land of Cute Boisのレックス。\nレックスは[Nintendo Switch](https://www.nintendo.co.jp/hardware/switch/)ゲーム「[ゼノブレイド2](https://www.nintendo.co.jp/switch/adena/index.html)」の主人公から発想して、レックスの真似をするボットです。\nレックスバージョン0.2の開発者：\n**Tetsuki Syu#1250、Kirito#9286**\n制作言語・フレームワーク：\n[Dart](https://dart.dev/)と[Nyxx](https://github.com/l7ssha/nyxx)ライブラリ。';
       final channel = await event.message.channel.getOrDownload();
       await channel.sendMessage(embed: embed);
+    }
+
+    if (event.message.content.startsWith('r?owoify')) {
+      final cmdLength = 'r?owoify'.length + 1;
+      final content = event.message.content.substring(cmdLength);
+      final channel = await event.message.channel.getOrDownload();
+      await channel.sendMessage(content: Owoifier.owoify(content, level: OwoifyLevel.Uvu));
     }
   });
 }
