@@ -12,3 +12,5 @@ doc/api/
 .DS_Store
 **/*/.DS_Store
 .idea/
+**/*/*.exe
+assets/random_responses.json

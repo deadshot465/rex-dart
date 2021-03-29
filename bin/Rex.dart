@@ -1,20 +1,26 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:dotenv/dotenv.dart' show load, env;
 import 'package:nyxx/nyxx.dart';
 import 'package:owoify_dart/owoify_dart.dart';
 
-const RANDOM_RESPONSES = ['やほー', 'こんばんは', 'おはよう', 'こんにちは', 'ご機嫌よう', 'よろしくね', 'なに'];
 const ACTIVITIES = ['Nintendo Switch', 'ゼノブレイド2', 'PlayStation 5', 'Xbox Series X'];
+const RANDOM_RESPONSES_PATH = './assets/random_responses.json';
+
+final _jsonDecoder = JsonDecoder(null);
+final _jsonEncoder = JsonEncoder(null);
+
+List<String> _randomResponses = [];
 
 void main(List<String> arguments) {
   load();
+  _randomResponses = _loadRandomResponses();
   final token = env['TOKEN'];
   final client = Nyxx(token, GatewayIntents.guildMessages | GatewayIntents.allUnprivileged);
   final rng = Random();
-  var clientId = 0;
-  var clientMention = '';
 
   Future.doWhile(() async {
     await Future.delayed(Duration(minutes: 20));
@@ -30,15 +36,13 @@ void main(List<String> arguments) {
   client.onReady.listen((event) {
     final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
     client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
-    clientId = client.self.id.id;
-    clientMention = '<@!$clientId>';
   });
 
   client.onSelfMention.listen((event) async {
     final author = event.message.author as User;
-    final randomResponse = RANDOM_RESPONSES[rng.nextInt(RANDOM_RESPONSES.length)];
+    final randomResponse = _randomResponses[rng.nextInt(_randomResponses.length)].replaceAll('{user}', author.mention);
     final channel = await event.message.channel.getOrDownload();
-    await channel.sendMessage(content: '$randomResponse、${author.mention}!');
+    await channel.sendMessage(content: '$randomResponse');
   });
 
   client.onMessageReceived.listen((event) async {
@@ -47,7 +51,7 @@ void main(List<String> arguments) {
       final channel = await event.message.channel.getOrDownload();
       final message = await channel.sendMessage(content: '\uD83C\uDFD3 ピング中……');
       final diff = DateTime.now().difference(startTime).inMilliseconds;
-      await message?.edit(content: '\uD83C\uDFD3 ポン！\nレイテンシ：${diff}ミリ秒。');
+      await message?.edit(content: '\uD83C\uDFD3 ポン！\nレイテンシ：$diffミリ秒。');
     }
 
     if (event.message.content == 'r?about') {
@@ -73,5 +77,42 @@ void main(List<String> arguments) {
       final channel = await event.message.channel.getOrDownload();
       await channel.sendMessage(content: Owoifier.owoify(content, level: OwoifyLevel.Uvu));
     }
+
+    if (event.message.content.startsWith('r?response')) {
+      final cmdLength = 'r?response'.length + 1;
+      final content = event.message.content.substring(cmdLength).split(' ');
+      final cmd = content.removeAt(0);
+      final response = _handleResponse(cmd, content.join(' '));
+      final channel = await event.message.channel.getOrDownload();
+      await channel.sendMessage(content: response);
+    }
   });
+}
+
+String _handleResponse(String cmd, String content) {
+  switch (cmd.toLowerCase()) {
+    case 'add':
+      return _addResponse(content);
+    case 'remove':
+      return _removeResponse(content);
+    default:
+      return 'あれってなに？';
+  }
+}
+
+String _addResponse(String content) {
+  _randomResponses.add(content);
+  File(RANDOM_RESPONSES_PATH).writeAsStringSync(_jsonEncoder.convert(_randomResponses));
+  return '了解！とにかくこう返事すればいいよな！';
+}
+
+String _removeResponse(String content) {
+  final result = _randomResponses.remove(content);
+  File(RANDOM_RESPONSES_PATH).writeAsStringSync(_jsonEncoder.convert(_randomResponses));
+  return result ? '了解！もうこれ以上あんなこと言わないでおこう！' : '俺はそもそもあんなことを言っていないし！';
+}
+
+List<String> _loadRandomResponses() {
+  return List<String>.from(_jsonDecoder.convert(File(RANDOM_RESPONSES_PATH).readAsStringSync())
+  ..map((elem) => elem.toString()));
 }
