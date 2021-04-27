@@ -38,6 +38,11 @@ void main(List<String> arguments) {
     client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
   });
 
+  client.shardManager.onConnected.listen((event) {
+    final activity = Activity.of(ACTIVITIES[rng.nextInt(ACTIVITIES.length)]);
+    client.setPresence(PresenceBuilder.of(status: UserStatus.online, game: activity));
+  });
+
   client.onSelfMention.listen((event) async {
     final author = event.message.author as User;
     final randomResponse = _randomResponses[rng.nextInt(_randomResponses.length)].replaceAll('{user}', author.mention);
